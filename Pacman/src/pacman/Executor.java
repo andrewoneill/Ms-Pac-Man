@@ -46,11 +46,11 @@ public class Executor
 	{
 		Executor exec=new Executor();
 
-		/*
+		
 		//run multiple games in batch mode - good for testing.
-		int numTrials=10;
-		exec.runExperiment(new RandomPacMan(),new RandomGhosts(),numTrials);
-		 */
+		//int numTrials=10;
+		//exec.runExperiment(new StarterPacMan(),new MyGhosts(),numTrials);
+		
 		
 		/*
 		//run a game in synchronous mode: game waits until controllers respond.

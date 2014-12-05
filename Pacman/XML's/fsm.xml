@@ -2,15 +2,15 @@
 <StateMachine>
 	<state>1
 		<currentstate>chase</currentstate>
-		<event>none</event>
+		<event>notedible</event>
 		<action>follow</action>
 		<newstate>chase</newstate>
 	</state>
 	<state>2
 		<currentstate>chase</currentstate>
-		<event>none</event>
-		<action>follow</action>
-		<newstate>chase</newstate>
+		<event>crowded</event>
+		<action>run</action>
+		<newstate>cutoff</newstate>
 	</state>
 	<state>3
 		<currentstate>chase</currentstate>
@@ -32,8 +32,14 @@
     </state>
     <state>6
 		<currentstate>cutoff</currentstate>
-		<event>none</event>
-		<action>do something</action>
+		<event>edible</event>
+		<action>run</action>
 		<newstate>flee</newstate>
+    </state>
+	<state>7
+		<currentstate>cutoff</currentstate>
+		<event>notedible</event>
+		<action>follow</action>
+		<newstate>chase</newstate>
     </state>
 </StateMachine>

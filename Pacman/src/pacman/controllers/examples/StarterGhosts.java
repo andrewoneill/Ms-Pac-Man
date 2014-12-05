@@ -46,7 +46,6 @@ public final class StarterGhosts extends Controller<EnumMap<GHOST,MOVE>>
 				}
 			}
 		}
-
 		return myMoves;
 	}
 	
