@@ -18,6 +18,8 @@ import pacman.game.Constants.GHOST;
 import pacman.game.Constants.MOVE;
 import pacman.game.Game;
 
+import java.awt.Point;;
+
 /*
  * This is the class you need to modify for your entry. In particular, you need to
  * fill in the getActions() method. Any additional classes you write should either
@@ -26,10 +28,10 @@ import pacman.game.Game;
 public class MyGhosts extends Controller<EnumMap<GHOST,MOVE>>
 {
 	public static final int CROWDED_DISTANCE = 40;
-	public static final int PACMAN_DISTANCE = 30;
+	public static final int PACMAN_DISTANCE = 20;
 	public static final int PILL_PROXIMITY = 20;
 	
-	private final static float CONSISTENCY=1.0f;	//carry out intended move with this probability
+	private final static float CONSISTENCY=0.8f;	//carry out intended move with this probability
 	private Random rnd=new Random();
 	
 	private EnumMap<GHOST, MOVE> myMoves=new EnumMap<GHOST, MOVE>(GHOST.class);
@@ -70,7 +72,6 @@ public class MyGhosts extends Controller<EnumMap<GHOST,MOVE>>
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 	
 	public EnumMap<GHOST, MOVE> getMove(Game game, long timeDue)
@@ -78,41 +79,71 @@ public class MyGhosts extends Controller<EnumMap<GHOST,MOVE>>
 		myMoves.clear();
 		
 		FSM();
-		
-		for(GHOST ghost : GHOST.values())				//for each ghost
-			if(game.doesGhostRequireAction(ghost))		//if it requires an action
-			{
+		for(GHOST ghost : GHOST.values())
+			if(game.doesGhostRequireAction(ghost)){
 				int currentIndex=game.getGhostCurrentNodeIndex(ghost);
+				int pacmanX = game.getNodeXCood(game.getPacmanCurrentNodeIndex());
+				int pacmanY = game.getNodeYCood(game.getPacmanCurrentNodeIndex());
+				int ghostX = game.getNodeXCood(game.getGhostCurrentNodeIndex(ghost));
+				int ghostY = game.getNodeXCood(game.getGhostCurrentNodeIndex(ghost));
+				Point pacmanPoint = new Point(pacmanX,pacmanY);
+				Point ghostPoint = new Point(ghostX,ghostY);
+				int radius = 50;
 				
 				if(game.getGhostEdibleTime(ghost)<1)
 					myEvent ="notedible";
 				if(game.getGhostEdibleTime(ghost)>=1)
 					myEvent = "edible";
-				if(closeToPower(game,ghost))
+				if(closeToPower(game,ghost) && pacmanPoint.distance(ghostPoint) < radius)
 					myEvent="flee";
 				if(isCrowded(game))
 					myEvent = "crowded";
 				if(myState.equals("flee")|| (myEvent.equals("crowded") && !closeToMsPacMan(game, currentIndex)))
 					getRetreatActions(game,ghost);
 				if(myState.equals("chase")){
-					if(rnd.nextFloat()<CONSISTENCY)	//approach/retreat from the current node that Ms Pac-Man is at
+					if(rnd.nextFloat()<CONSISTENCY)
 						myMoves.put(ghost,game.getApproximateNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost),
 								game.getPacmanCurrentNodeIndex(),game.getGhostLastMoveMade(ghost),DM.PATH));
 					else
 						myMoves.put(ghost,moves[rnd.nextInt(moves.length)]);
 				}
+				if(ghost.equals(GHOST.BLINKY) && myEvent.equals("notedible")){
+					pacmanX = game.getNodeXCood(game.getPacmanCurrentNodeIndex());
+					pacmanY = game.getNodeYCood(game.getPacmanCurrentNodeIndex());
+					ghostX = game.getNodeXCood(game.getGhostCurrentNodeIndex(ghost));
+					ghostY = game.getNodeXCood(game.getGhostCurrentNodeIndex(ghost));
+					pacmanPoint = new Point(pacmanX,pacmanY);
+					ghostPoint = new Point(ghostX,ghostY);
+					radius = 60;
+					if( pacmanPoint.distance(ghostPoint) < radius){
+						myMoves.put(ghost,game.getNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost),
+								game.getPacmanCurrentNodeIndex(),game.getGhostLastMoveMade(ghost),DM.MANHATTAN));
+					}
+				}
+				if(ghost.equals(GHOST.INKY) && myEvent.equals("notedible")){
+					int attackNode = game.getNeighbour(game.getPacmanCurrentNodeIndex(), game.getPacmanLastMoveMade());
+					try{
+						int neighboutNode = 0;
+						for(int i = 0; i < 16; i++)
+						{
+							neighboutNode = game.getNeighbour(attackNode, game.getPacmanLastMoveMade());
+							if( neighboutNode != -1){
+								attackNode = neighboutNode;
+							}
+						}
+					}catch(Exception e){		
+					}
 				
-				
-				
-				if(ghost.equals(GHOST.BLINKY)){
-					System.out.println("Action " + myAction);
-					System.out.println("Event " + myEvent);
-					System.out.println("State " + myState);
+					if( attackNode == -1){
+						myMoves.put(ghost,game.getNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost),
+								game.getPacmanCurrentNodeIndex(),game.getGhostLastMoveMade(ghost),DM.MANHATTAN));
+					}
+					else{
+						MOVE attackMove = game.getApproximateNextMoveTowardsTarget(game.getGhostCurrentNodeIndex(ghost), attackNode, game.getGhostLastMoveMade(ghost), DM.MANHATTAN);
+						myMoves.put(ghost,attackMove);
+					}
 				}
 			}
-		
-		//Place your game logic here to play the game as the ghosts
-		
 		return myMoves;
 	}
 	private boolean closeToMsPacMan(Game game,int location)
